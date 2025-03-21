@@ -16,10 +16,8 @@ function App() {
   const [searchInput, setSearchInput] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [albums, setAlbums] = useState([]);
+  const [artist, setArtist] = useState(null);
 
-  // Get Access Token
-  // Use effect allow us to run the code only once when the component is mounted
-  // The empty array as the second argument makes the code run only once
   useEffect(() => {
     let authParams = {
       method: "POST",
@@ -40,7 +38,6 @@ function App() {
       });
   }, []);
 
-  // Search for Artist
   async function search() {
     let artistParams = {
       method: "GET",
@@ -50,20 +47,21 @@ function App() {
       },
     };
 
-    // Get Artist
-    const artistID = await fetch(
+    const artistData = await fetch(
       "https://api.spotify.com/v1/search?q=" + searchInput + "&type=artist",
       artistParams
     )
       .then((result) => result.json())
       .then((data) => {
-        return data.artists.items[0].id;
+        console.log("data", data);
+        const artistInfo = data.artists.items[0];
+        setArtist(artistInfo); // Stocker les infos de l'artiste
+        return artistInfo.id;
       });
 
-    // Get Artist Albums
     await fetch(
       "https://api.spotify.com/v1/artists/" +
-        artistID +
+        artistData +
         "/albums?include_groups=album&market=US&limit=50",
       artistParams
     )
@@ -75,10 +73,11 @@ function App() {
 
   return (
     <>
-      <Container>
+      <main>Search for Artist !</main>
+      <Container style={{ display: "flex", justifyContent: "center" }}>
         <InputGroup>
           <FormControl
-            placeholder="Search For Artist"
+            placeholder="Here !"
             type="input"
             aria-label="Search for an Artist"
             onKeyDown={(event) => {
@@ -89,7 +88,7 @@ function App() {
             onChange={(event) => setSearchInput(event.target.value)}
             style={{
               width: "300px",
-              height: "35px",
+              height: "30px",
               borderWidth: "0px",
               borderStyle: "solid",
               borderRadius: "5px",
@@ -97,6 +96,7 @@ function App() {
               paddingLeft: "10px",
               backgroundColor: "white",
               color: "black",
+              marginTop: "10%",
             }}
           />
           <Button
@@ -108,6 +108,68 @@ function App() {
         </InputGroup>
       </Container>
 
+      {/* Affichage de l'artiste */}
+      {artist && (
+        <Container>
+          <Card
+            style={{
+              backgroundColor: "white",
+              margin: "20px auto",
+              borderRadius: "5px",
+              padding: "20px",
+              textAlign: "center",
+              width: "500px",
+              maxWidth: "90%",
+            }}
+          >
+            <Card.Img
+              variant="top"
+              src={artist.images[0]?.url}
+              style={{
+                borderRadius: "50%",
+                width: "200px",
+                height: "200px",
+                margin: "auto",
+                boxShadow: "0 4px 8px 0 rgba(0,0,0,0.2)",
+              }}
+            />
+            <Card.Body>
+              <Card.Text
+                style={{ fontSize: "24px", fontWeight: "bold", color: "black" }}
+              >
+                {artist.name}
+              </Card.Text>
+              <Card.Text style={{ fontSize: "18px", color: "black" }}>
+                Followers: {artist.followers.total.toLocaleString()}
+              </Card.Text>
+              <Card.Text style={{ fontSize: "16px", color: "black" }}>
+                Genre:{" "}
+                {artist.genres.join(", ") ? artist.genres.join(", ") : "N/A"}
+              </Card.Text>
+              <Button
+                href={artist.external_urls.spotify}
+                target="_blank"
+                style={{
+                  backgroundColor: "#800080",
+                  color: "white",
+                  fontWeight: "bold",
+                  fontSize: "15px",
+                  borderRadius: "5px",
+                  padding: "10px",
+                  bottom: "10px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  position: "absolute",
+                }}
+              >
+                Spotify Profile
+              </Button>
+            </Card.Body>
+          </Card>
+        </Container>
+      )}
+
+      {/* Affichage des albums */}
       <Container>
         <Row
           style={{
@@ -116,6 +178,7 @@ function App() {
             flexWrap: "wrap",
             justifyContent: "space-around",
             alignContent: "center",
+            marginTop: "50px",
           }}
         >
           {albums.map((album) => {
@@ -134,6 +197,8 @@ function App() {
                   src={album.images[0].url}
                   style={{
                     borderRadius: "4%",
+                    marginTop: "4%",
+                    boxShadow: "0 4px 8px 0 rgba(0,0,0,0.2)",
                   }}
                 />
                 <Card.Body>
@@ -142,31 +207,35 @@ function App() {
                       whiteSpace: "wrap",
                       fontWeight: "bold",
                       maxWidth: "200px",
-                      fontSize: "18px",
+                      fontSize: "16px",
                       marginTop: "10px",
                       color: "black",
+                      textAlign: "center",
+                      margin: "auto",
                     }}
                   >
                     {album.name}
                   </Card.Title>
-                  <Card.Text
-                    style={{
-                      color: "black",
-                    }}
-                  >
+                  <Card.Text style={{ color: "black", fontSize: "16px" }}>
                     Release Date: <br /> {album.release_date}
+                  </Card.Text>
+                  <Card.Text style={{ color: "black", fontSize: "16px" }}>
+                    Number of Tracks: <br /> {album.total_tracks}
                   </Card.Text>
                   <Button
                     href={album.external_urls.spotify}
+                    target="_blank"
                     style={{
-                      // purple color
                       backgroundColor: "#800080",
-                      borderColor: "#800080",
                       color: "white",
                       fontWeight: "bold",
                       fontSize: "15px",
                       borderRadius: "5px",
                       padding: "10px",
+                      bottom: "10px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      position: "absolute",
                     }}
                   >
                     Album Link
